@@ -68,6 +68,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         return file_list.size();
     }
 
+
     public static class ViewHolder extends RecyclerView.ViewHolder{
 
         public ImageView fileImg;

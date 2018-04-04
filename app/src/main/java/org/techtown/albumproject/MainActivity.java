@@ -57,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
     StringTokenizer st;
     private static final String TAG = "MainActivity";
 
+    //메뉴타입 정의
+    int menu_type = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,6 +93,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.addOnItemTouchListener(new RecyclerViewOnItemClickListener(MainActivity.this, recyclerView, new RecyclerViewOnItemClickListener.OnItemClickListener() {
             @Override
             public void onItemClick(View v, int position) {
+                menu_type = 0;  // 테스트
+
                 editMode=adapter.getEditMode();
                 if(editMode==0){ //편집모드가 아닐 때
                     if(file_list.get(position).getFileType()==0){
@@ -114,6 +119,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onItemLongClick(View v, int position) {
+                menu_type = 1;  // 롱클릭한 경우 메뉴바의 menu_type이 바뀜
+
                 editMode=adapter.getEditMode();
                 if(editMode==0){ //편집모드가 일반일 때만 편집모드에 진입할 수 있다.
                     editMode=1;
@@ -122,10 +129,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }));
-
-
-
-
     }
 
     //networkinfo를 얻어오는 메소드
@@ -255,6 +258,24 @@ public class MainActivity extends AppCompatActivity {
         MenuInflater inflater=getMenuInflater();
         inflater.inflate(R.menu.main_menu, menu);
         return true;
+    }
+
+    // 메뉴 동적생성
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {  // 유저가 메뉴 버튼을 누를때마다 호출되는 메소드
+        menu.clear(); // 현재메뉴 Clear
+        MenuInflater inflater = getMenuInflater();
+
+        switch (menu_type) {
+            case 0: // 메인메뉴 호출
+                inflater.inflate(R.menu.main_menu, menu);
+                break;
+
+            case 1: // 편집메뉴 호출
+                inflater.inflate(R.menu.edited_menu, menu);
+                break;
+        }
+        return super.onPrepareOptionsMenu(menu);
     }
 
     //메뉴 클릭 메소드

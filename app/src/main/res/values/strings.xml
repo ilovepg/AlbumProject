@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">AlbumProject</string>
-    <string name="createFolder">새 폴더</string>
+    <string name="createFolder">새 폴더 추가</string>
+    <string name="editFolder">편집</string>
+    <string name="transferFolder">이동</string>
+    <string name="copyFolder">복사</string>
 </resources>

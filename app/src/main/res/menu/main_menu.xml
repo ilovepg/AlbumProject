@@ -5,4 +5,9 @@
         android:id="@+id/action_createFolder"
         android:title="@string/createFolder"
         app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/action_editFolder"
+        android:title="@string/editFolder"
+        app:showAsAction="never"/>
 </menu>
