@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private List<Linux_File_Item> file_list;
     private RecyclerView.LayoutManager mLayoutManager;
     private Button backBtn;                 //뒤로가기 버튼
+    private int editMode=0;                 //편집모드 0:일반, 1:편집
 
     //리눅스 경로
     private String basePath="/var/www/html/albumProject/album/"; //베이스 경로
@@ -89,24 +90,36 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.addOnItemTouchListener(new RecyclerViewOnItemClickListener(MainActivity.this, recyclerView, new RecyclerViewOnItemClickListener.OnItemClickListener() {
             @Override
             public void onItemClick(View v, int position) {
-                if(file_list.get(position).getFileType()==0){
-                    //파일타입이 폴더(디렉토리)일때
-                    String folderName=file_list.get(position).getFileName();
-                    currentPath="";
-                    currentPath+=basePath;
+                editMode=adapter.getEditMode();
+                if(editMode==0){ //편집모드가 아닐 때
+                    if(file_list.get(position).getFileType()==0){
+                        //파일타입이 폴더(디렉토리)일때
+                        String folderName=file_list.get(position).getFileName();
+                        currentPath="";
+                        currentPath+=basePath;
 
-                    //pathDepth 만큼 Path를 더해준다.
-                    for(int i = 0; i< pathDepth.size(); i++){
-                        currentPath+=(pathDepth.get(i)+"/");
+                        //pathDepth 만큼 Path를 더해준다.
+                        for(int i = 0; i< pathDepth.size(); i++){
+                            currentPath+=(pathDepth.get(i)+"/");
+                        }
+                        currentPath+=folderName; //내가 클릭한 디렉토리 이름까지 붙여주면 끝.
+                        getData("test", currentPath);
                     }
-                    currentPath+=folderName; //내가 클릭한 디렉토리 이름까지 붙여주면 끝.
-                    getData("test", currentPath);
+                }else{            //편집모드 일때
+                    boolean isChecked = file_list.get(position).isChecked(); //클릭한 아이템의 check 상태를 가져온다.
+                    file_list.get(position).setChecked(!isChecked);          //가져온 check 상태와 반대의 값을 넣는다. (check됐으면 check안되게, check안됐으면 check되게)
+                    adapter.notifyItemChanged(position,file_list.get(position)); //adapter 새로고침(해당 포지션만)
                 }
             }
 
             @Override
             public void onItemLongClick(View v, int position) {
-                v.findViewById(R.id.checkBox).setVisibility(View.VISIBLE);
+                editMode=adapter.getEditMode();
+                if(editMode==0){ //편집모드가 일반일 때만 편집모드에 진입할 수 있다.
+                    editMode=1;
+                    adapter.setEditMode(editMode);
+                    adapter.notifyDataSetChanged();
+                }
             }
         }));
 
@@ -301,11 +314,21 @@ public class MainActivity extends AppCompatActivity {
     //스마트폰의 backButton을 눌렀을 때
     @Override
     public void onBackPressed() {
-        if(backBtn.getVisibility()==View.GONE){
-            super.onBackPressed(); //만약 뒤로가기 버튼이 안보인다면 종료
-        }else{
-            goToBack();            //뒤로가기 메소드를 호출한다.
+        editMode=adapter.getEditMode(); //현재의 편짐모드 상태를 가져온다.
+        if(editMode==0){         //편집모드가 비활성화라면
+            if(backBtn.getVisibility()==View.GONE){
+                super.onBackPressed(); //만약 뒤로가기 버튼이 안보인다면 종료
+            }else{
+                goToBack();            //뒤로가기 메소드를 호출한다.
+            }
+        }else{                   //편집모드가 활성화 라면
+            //편집모드를 비활성화 시킨다.
+            editMode=0;
+            adapter.setEditMode(editMode);
+            //adapter에게 알린다.
+            adapter.notifyDataSetChanged();
         }
+
     }
 
     //디렉토리 뒤로가기 메소드

@@ -20,6 +20,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
     private List<Linux_File_Item> file_list;
     private int itemLayout;
     private Context context;
+    private int editMode=0; //편집모드 0:일반, 1:편집
 
     public MainRecyclerViewAdapter(List<Linux_File_Item> file_list, int itemLayout, Context context) {
         this.file_list = file_list;
@@ -43,6 +44,23 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         if(item.getUnderFolderNumber()>0){
           holder.fileImg.setImageResource(R.drawable.folder);
         }
+
+        //편집모드가 활성화 되어있다면
+        if(editMode==1){
+            holder.fileChecked.setVisibility(View.VISIBLE); //체크박스를 보이게한다.
+            holder.fileChecked.setChecked(item.isChecked());//체크박스를 체크되게 해준다.
+        }else{ //편집모드가 비활성화 되었다면(백버튼)
+            holder.fileChecked.setVisibility(View.GONE);
+            item.setChecked(false);
+        }
+    }
+
+    public void setEditMode(int editMode){
+        this.editMode=editMode;
+    }
+
+    public int getEditMode(){
+        return editMode;
     }
 
     @Override
@@ -59,9 +77,9 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
 
         public ViewHolder(View itemView) {
             super(itemView);
-            fileImg = (ImageView)itemView.findViewById(R.id.folder_img);
-            fileName = (TextView)itemView.findViewById(R.id.folder_name);
-            underFolderNumber = (TextView)itemView.findViewById(R.id.underFolder_number);
+            fileImg = (ImageView) itemView.findViewById(R.id.folder_img);
+            fileName = (TextView) itemView.findViewById(R.id.folder_name);
+            underFolderNumber = (TextView) itemView.findViewById(R.id.underFolder_number);
             fileChecked = (CheckBox) itemView.findViewById(R.id.folder_checkBox);
         }
     } // end of ViewHolder
