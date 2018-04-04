@@ -266,6 +266,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //메뉴 클릭 메소드
+    //gitTest
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
