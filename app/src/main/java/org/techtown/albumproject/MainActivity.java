@@ -12,11 +12,9 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -86,53 +84,34 @@ public class MainActivity extends AppCompatActivity {
         backBtn = (Button)findViewById(R.id.main_backBtn); //뒤로가기 버튼
         backBtn.setVisibility(View.GONE); //처음에는 안보이게한다. (Root 디렉토리이기 때문에 뒤로갈 수 없게)
 
-
         getData("test",basePath); //서버에서 데이터 가져오기
 
-        /*RecyclerView아이템을 클릭했을 때*/
-        final GestureDetector gestureDetector = new GestureDetector(MainActivity.this,new GestureDetector.SimpleOnGestureListener()
-        {
+        recyclerView.addOnItemTouchListener(new RecyclerViewOnItemClickListener(MainActivity.this, recyclerView, new RecyclerViewOnItemClickListener.OnItemClickListener() {
             @Override
-            public boolean onSingleTapUp(MotionEvent e)
-            {
-                return true;
-            }
-        });
+            public void onItemClick(View v, int position) {
+                if(file_list.get(position).getFileType()==0){
+                    //파일타입이 폴더(디렉토리)일때
+                    String folderName=file_list.get(position).getFileName();
+                    currentPath="";
+                    currentPath+=basePath;
 
-        recyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
-            @Override
-            public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
-                View child = rv.findChildViewUnder(e.getX(),e.getY());
-                //item이 없는 빈공간을 터치할 경우 child = null
-                if(child!=null&&gestureDetector.onTouchEvent(e)){
-                    if(file_list.get(rv.getChildLayoutPosition(child)).getFileType()==0){
-                        //파일타입이 폴더(디렉토리)일때
-                        String folderName=file_list.get(rv.getChildLayoutPosition(child)).getFileName();
-                        currentPath="";
-                        currentPath+=basePath;
-
-                        //pathDepth 만큼 Path를 더해준다.
-                        for(int i = 0; i< pathDepth.size(); i++){
-                            currentPath+=(pathDepth.get(i)+"/");
-                        }
-                        currentPath+=folderName; //내가 클릭한 디렉토리 이름까지 붙여주면 끝.
-                        getData("test", currentPath);
+                    //pathDepth 만큼 Path를 더해준다.
+                    for(int i = 0; i< pathDepth.size(); i++){
+                        currentPath+=(pathDepth.get(i)+"/");
                     }
+                    currentPath+=folderName; //내가 클릭한 디렉토리 이름까지 붙여주면 끝.
+                    getData("test", currentPath);
                 }
-
-                return false;
             }
 
             @Override
-            public void onTouchEvent(RecyclerView rv, MotionEvent e) {
+            public void onItemLongClick(View v, int position) {
 
             }
+        }));
 
-            @Override
-            public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
 
-            }
-        });
+
 
     }
 
@@ -266,7 +245,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //메뉴 클릭 메소드
-    //gitTest
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
