@@ -5,6 +5,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -54,12 +55,14 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         public ImageView fileImg;
         public TextView fileName;
         public TextView underFolderNumber;
+        public CheckBox fileChecked;
 
         public ViewHolder(View itemView) {
             super(itemView);
             fileImg = (ImageView)itemView.findViewById(R.id.folder_img);
             fileName = (TextView)itemView.findViewById(R.id.folder_name);
             underFolderNumber = (TextView)itemView.findViewById(R.id.underFolder_number);
+            fileChecked = (CheckBox) itemView.findViewById(R.id.folder_checkBox);
         }
     } // end of ViewHolder
 

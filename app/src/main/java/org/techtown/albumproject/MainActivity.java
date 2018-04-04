@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onItemLongClick(View v, int position) {
-
+                v.findViewById(R.id.checkBox).setVisibility(View.VISIBLE);
             }
         }));
 

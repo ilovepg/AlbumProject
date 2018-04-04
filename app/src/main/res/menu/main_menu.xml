@@ -5,7 +5,4 @@
         android:id="@+id/action_createFolder"
         android:title="@string/createFolder"
         app:showAsAction="never"/>
-
-
-
 </menu>
