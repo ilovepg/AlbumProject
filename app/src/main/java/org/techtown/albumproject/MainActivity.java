@@ -93,7 +93,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.addOnItemTouchListener(new RecyclerViewOnItemClickListener(MainActivity.this, recyclerView, new RecyclerViewOnItemClickListener.OnItemClickListener() {
             @Override
             public void onItemClick(View v, int position) {
-                menu_type = 0;  // 테스트
+                // 테스트
+                menu_type = 0;
 
                 editMode=adapter.getEditMode();
                 if(editMode==0){ //편집모드가 아닐 때
