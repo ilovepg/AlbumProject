@@ -8,6 +8,8 @@ import android.view.View;
 
 /**
  * Created by Developer on 2018-04-04.
+ * RecyclerView 터치 클래스입니다.
+ * short Click, long Click
  */
 
 public class RecyclerViewOnItemClickListener extends RecyclerView.SimpleOnItemTouchListener {

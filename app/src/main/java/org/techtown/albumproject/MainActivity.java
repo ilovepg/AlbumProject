@@ -93,9 +93,6 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.addOnItemTouchListener(new RecyclerViewOnItemClickListener(MainActivity.this, recyclerView, new RecyclerViewOnItemClickListener.OnItemClickListener() {
             @Override
             public void onItemClick(View v, int position) {
-                // 테스트
-                menu_type = 0;
-
                 editMode=adapter.getEditMode();
                 if(editMode==0){ //편집모드가 아닐 때
                     if(file_list.get(position).getFileType()==0){
@@ -120,13 +117,9 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onItemLongClick(View v, int position) {
-                menu_type = 1;  // 롱클릭한 경우 메뉴바의 menu_type이 바뀜
-
                 editMode=adapter.getEditMode();
                 if(editMode==0){ //편집모드가 일반일 때만 편집모드에 진입할 수 있다.
-                    editMode=1;
-                    adapter.setEditMode(editMode);
-                    adapter.notifyDataSetChanged();
+                    switchEditMode();
                 }
             }
         }));
@@ -253,14 +246,6 @@ public class MainActivity extends AppCompatActivity {
         }.execute();
     }
 
-    //메뉴바 위에 아이콘들 생성
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater=getMenuInflater();
-        inflater.inflate(R.menu.main_menu, menu);
-        return true;
-    }
-
     // 메뉴 동적생성
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {  // 유저가 메뉴 버튼을 누를때마다 호출되는 메소드
@@ -308,7 +293,6 @@ public class MainActivity extends AppCompatActivity {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener(){
                 @Override
                 public void onClick(View v) {
-
                     String input = folderName.getText().toString();
                     String pattern = "^[a-zA-Z0-9가-힣ㄱ-ㅎ]*$"; //영문,숫자,한글만 가능
                     if (!Pattern.matches(pattern, input)) {
@@ -318,6 +302,13 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
+        }else if(id==R.id.action_editFolder){ //편집모드를 여는 메뉴
+            switchEditMode();
+        }else if(id==R.id.action_transferFolder){ //파일을 이동하는 메뉴
+            MoveBottomSheet moveBottomSheet = MoveBottomSheet.getInstance();
+            moveBottomSheet.show(getSupportFragmentManager(),"moveBottomSheet");
+        }else if(id==R.id.action_copyFolder){  //파일을 복사하는 메뉴
+
         }
 
         return super.onOptionsItemSelected(item);
@@ -346,6 +337,7 @@ public class MainActivity extends AppCompatActivity {
         }else{                   //편집모드가 활성화 라면
             //편집모드를 비활성화 시킨다.
             editMode=0;
+            menu_type=editMode;
             adapter.setEditMode(editMode);
             //adapter에게 알린다.
             adapter.notifyDataSetChanged();
@@ -366,6 +358,15 @@ public class MainActivity extends AppCompatActivity {
         }
         getData("test",currentPath);
     }
+
+    //편집모드로 바꾸는 메소드
+    private void switchEditMode(){
+        editMode=1;  //편집모드 0:일반, 1:편집
+        menu_type=editMode; //menu_type을 바꾼다.
+        adapter.setEditMode(editMode);
+        adapter.notifyDataSetChanged();
+    }
+
 
 
 }

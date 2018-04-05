@@ -28,4 +28,11 @@ public interface Request {
             @Query("dirName")String dirName
     );
 
+    //파일 이동
+    @GET("moveFile.php")
+    Call<ResponseBody> mvFile(
+            @Query("userID")String userID,
+            @Query("path")String path,
+            @Query("fileName")String fileName
+    );
 }
