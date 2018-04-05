@@ -80,6 +80,7 @@ public class MoveBottomSheet extends BottomSheetDialogFragment{
                 return true;
             }
         });
+
         recyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
             @Override
             public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
@@ -112,8 +113,6 @@ public class MoveBottomSheet extends BottomSheetDialogFragment{
 
             }
         });
-
-
 
         //파일 리스트를 가져온다.
         getFileList("test",basePath);
@@ -174,5 +173,4 @@ public class MoveBottomSheet extends BottomSheetDialogFragment{
             }
         });
     }
-
 }

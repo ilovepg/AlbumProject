@@ -5,6 +5,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -12,12 +13,15 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -42,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
     /*UI관련*/
     private RecyclerView recyclerView;      //폴더들이 나열될 RecyclerView
-    private MainRecyclerViewAdapter adapter;//RecyclerView어댑터
+    private MainRecyclerViewAdapter adapter_main;//RecyclerView어댑터
     private List<Linux_File_Item> file_list;
     private RecyclerView.LayoutManager mLayoutManager;
     private Button backBtn;                 //뒤로가기 버튼
@@ -59,6 +63,15 @@ public class MainActivity extends AppCompatActivity {
 
     //메뉴타입 정의
     int menu_type = 0;
+
+    /* 연진 추가 */
+    private LinearLayout bottomSheet;
+    private BottomSheetBehavior mBottomSheetBehavior;
+
+    private RecyclerView recyclerView_move;
+    private MoveRecyclerViewAdpater adapter_move;
+    private List<Linux_File_Item> file_list_move;
+    private RecyclerView.LayoutManager mLayoutManager_move;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.addOnItemTouchListener(new RecyclerViewOnItemClickListener(MainActivity.this, recyclerView, new RecyclerViewOnItemClickListener.OnItemClickListener() {
             @Override
             public void onItemClick(View v, int position) {
-                editMode=adapter.getEditMode();
+                editMode=adapter_main.getEditMode();
                 if(editMode==0){ //편집모드가 아닐 때
                     if(file_list.get(position).getFileType()==0){
                         //파일타입이 폴더(디렉토리)일때
@@ -111,18 +124,89 @@ public class MainActivity extends AppCompatActivity {
                 }else{            //편집모드 일때
                     boolean isChecked = file_list.get(position).isChecked(); //클릭한 아이템의 check 상태를 가져온다.
                     file_list.get(position).setChecked(!isChecked);          //가져온 check 상태와 반대의 값을 넣는다. (check됐으면 check안되게, check안됐으면 check되게)
-                    adapter.notifyItemChanged(position,file_list.get(position)); //adapter 새로고침(해당 포지션만)
+                    adapter_main.notifyItemChanged(position,file_list.get(position)); //adapter 새로고침(해당 포지션만)
                 }
             }
 
             @Override
             public void onItemLongClick(View v, int position) {
-                editMode=adapter.getEditMode();
+                editMode=adapter_main.getEditMode();
                 if(editMode==0){ //편집모드가 일반일 때만 편집모드에 진입할 수 있다.
                     switchEditMode();
                 }
             }
         }));
+
+        /* 연진 추가 시작 (BottomSheet) */
+        bottomSheet = (LinearLayout) findViewById(R.id.bottomMove_bottomSheet);
+        mBottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
+        mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+        /*RecyclerView 셋팅*/
+        recyclerView_move = (RecyclerView) findViewById(R.id.bottomMove_recyclerView);
+        mLayoutManager_move=new LinearLayoutManager(MainActivity.this);
+        recyclerView_move.setLayoutManager(mLayoutManager_move);
+        recyclerView_move.setItemAnimator(new DefaultItemAnimator());
+
+        /*버튼 클릭 리스너*/
+        Button bottomMove_cancleBtn = (Button) findViewById(R.id.bottomMove_cancleBtn);
+        Button bottomMove_createFolder = (Button) findViewById(R.id.bottomMove_createFolder);
+        Button bottomMove_submit = (Button) findViewById(R.id.bottomMove_submitBtn);
+
+        //취소 버튼 클릭하면 BottomSheet 사라짐
+        bottomMove_cancleBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            }
+        });
+
+        //RecyclerView 버튼 클릭
+        // 터치를 하고 손을 땔떼만 값을 얻을 수 있도록 추가
+        final GestureDetector gestureDetector = new GestureDetector(MainActivity.this ,new GestureDetector.SimpleOnGestureListener(){
+            @Override
+            public boolean onSingleTapUp(MotionEvent e) {
+                return true;
+            }
+        });
+
+        recyclerView_move.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
+            @Override
+            public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
+                View child = rv.findChildViewUnder(e.getX(),e.getY());
+                if(child!=null && gestureDetector.onTouchEvent(e)){
+                    if(file_list_move.get(rv.getChildAdapterPosition(child)).getFileType()==0){
+                        //파일 타입이 폴더라면
+                        String folderName = file_list_move.get(rv.getChildAdapterPosition(child)).getFileName();
+                        currentPath = "";
+                        currentPath+=basePath;
+
+                        //pathDepth 만큼 Path를 더해준다.
+                        for(int i = 0; i< pathDepth.size(); i++){
+                            currentPath+=(pathDepth.get(i)+"/");
+                        }
+                        currentPath+=folderName; //내가 클릭한 디렉토리 이름까지 붙여주면 끝.
+                        getFileList("test",currentPath);
+                    }
+                }
+                return false;
+            }
+
+            @Override
+            public void onTouchEvent(RecyclerView rv, MotionEvent e) {
+
+            }
+
+            @Override
+            public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+
+            }
+        });
+
+        //파일 리스트를 가져온다.
+        getFileList("test", basePath);
+
+        /* 연진 추가 끝 */
     }
 
     //networkinfo를 얻어오는 메소드
@@ -148,9 +232,9 @@ public class MainActivity extends AppCompatActivity {
             public void onResponse(Call<List<Linux_File_Item>> call, Response<List<Linux_File_Item>> response) {
                 if(response.isSuccessful()){ //호출성공
                     file_list=response.body();
-                    adapter = new MainRecyclerViewAdapter(file_list,R.layout.linux_folder_item,MainActivity.this);
-                    recyclerView.setAdapter(adapter);
-                    adapter.notifyDataSetChanged();
+                    adapter_main = new MainRecyclerViewAdapter(file_list,R.layout.linux_folder_item,MainActivity.this);
+                    recyclerView.setAdapter(adapter_main);
+                    adapter_main.notifyDataSetChanged();
 
                     // '/'를 기준으로 나눈다.
                     st=new StringTokenizer(file_list.get(0).getPwd(),"/");
@@ -305,8 +389,13 @@ public class MainActivity extends AppCompatActivity {
         }else if(id==R.id.action_editFolder){ //편집모드를 여는 메뉴
             switchEditMode();
         }else if(id==R.id.action_transferFolder){ //파일을 이동하는 메뉴
-            MoveBottomSheet moveBottomSheet = MoveBottomSheet.getInstance();
-            moveBottomSheet.show(getSupportFragmentManager(),"moveBottomSheet");
+            //MoveBottomSheet moveBottomSheet = MoveBottomSheet.getInstance();
+            //moveBottomSheet.show(getSupportFragmentManager(),"moveBottomSheet");
+
+            /* 연진 추가 (BottomSheet) */
+
+            // 파일이동 클릭하면 BottomSheet 확장
+            mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         }else if(id==R.id.action_copyFolder){  //파일을 복사하는 메뉴
 
         }
@@ -327,7 +416,7 @@ public class MainActivity extends AppCompatActivity {
     //스마트폰의 backButton을 눌렀을 때
     @Override
     public void onBackPressed() {
-        editMode=adapter.getEditMode(); //현재의 편짐모드 상태를 가져온다.
+        editMode=adapter_main.getEditMode(); //현재의 편짐모드 상태를 가져온다.
         if(editMode==0){         //편집모드가 비활성화라면
             if(backBtn.getVisibility()==View.GONE){
                 super.onBackPressed(); //만약 뒤로가기 버튼이 안보인다면 종료
@@ -338,11 +427,10 @@ public class MainActivity extends AppCompatActivity {
             //편집모드를 비활성화 시킨다.
             editMode=0;
             menu_type=editMode;
-            adapter.setEditMode(editMode);
+            adapter_main.setEditMode(editMode);
             //adapter에게 알린다.
-            adapter.notifyDataSetChanged();
+            adapter_main.notifyDataSetChanged();
         }
-
     }
 
     //디렉토리 뒤로가기 메소드
@@ -363,10 +451,60 @@ public class MainActivity extends AppCompatActivity {
     private void switchEditMode(){
         editMode=1;  //편집모드 0:일반, 1:편집
         menu_type=editMode; //menu_type을 바꾼다.
-        adapter.setEditMode(editMode);
-        adapter.notifyDataSetChanged();
+        adapter_main.setEditMode(editMode);
+        adapter_main.notifyDataSetChanged();
     }
 
+    /* 연진 추가 (BottomSheet) */
 
+    //파일 리스트를 가져온다. (안드로이드 ↔ 서버)
+    private void getFileList(String userID, String folderName){
+        Retrofit.Builder builder = new Retrofit.Builder()
+                .baseUrl("http://52.78.47.225/albumProject/")
+                .addConverterFactory(GsonConverterFactory.create());
+        Retrofit retrofit = builder.build();
 
+        Log.e(TAG,"getFileList CurrentPath->"+folderName);
+
+        final Request request = retrofit.create(Request.class);
+        Call<List<Linux_File_Item>> call = request.getFolder(userID,folderName);
+        call.enqueue(new Callback<List<Linux_File_Item>>() {
+            @Override
+            public void onResponse(Call<List<Linux_File_Item>> call, Response<List<Linux_File_Item>> response) {
+                if(response.isSuccessful()){ //호출성공
+                    file_list_move=response.body();
+                    adapter_move = new MoveRecyclerViewAdpater(file_list_move,R.layout.move_item, getApplicationContext());
+                    recyclerView_move.setAdapter(adapter_move);
+                    adapter_move.notifyDataSetChanged();
+
+                    // '/'를 기준으로 나눈다.
+                    st=new StringTokenizer(file_list_move.get(0).getPwd(),"/");
+
+                    //pathDepth에 기존의 정보가 중복되지 않게 clear
+                    pathDepth.clear();
+
+                    //pathDepth에 넣는다.
+                    while(st.hasMoreTokens()){
+                        pathDepth.add(st.nextToken()); //현재 작업 디렉토리를 저장.
+                    }
+
+                    /*//Debug
+                    for(int i=0;i<file_list.size();i++){
+                        Log.e(TAG,"getFileList->"+file_list.get(i).getFileName());
+                        Log.e(TAG,"getFileList under->"+file_list.get(i).getUnderFolderNumber());
+                        Log.e(TAG,"getFileList path->"+file_list.get(i).getPwd());
+                    }*/
+                }else{
+                    int statusCode = response.code();
+                    Log.e(TAG,"getFileList statusCode"+statusCode);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Linux_File_Item>> call, Throwable t) {
+                Toast.makeText(getApplicationContext(), "fail", Toast.LENGTH_SHORT).show();
+                Log.e(TAG,"getFileList Fail"+t.toString());
+            }
+        });
+    }
 }
