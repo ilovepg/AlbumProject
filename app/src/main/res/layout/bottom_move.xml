@@ -5,11 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+
     >
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-
         >
         <TextView
             android:layout_width="wrap_content"
@@ -26,7 +26,6 @@
             android:text="취소"
             android:textSize="10sp"
             android:layout_toLeftOf="@+id/bottomMove_submitBtn"
-
             />
         <Button
             android:id="@+id/bottomMove_submitBtn"
@@ -37,16 +36,24 @@
             android:layout_alignParentEnd="true"
             />
     </RelativeLayout>
+
     <Button
         android:id="@+id/bottomMove_createFolder"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="새 폴더"
         />
+    <android.support.v4.widget.NestedScrollView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="500dp"
+        android:background="#fff"
+        android:orientation="vertical"
+        android:fillViewport="true">
     <android.support.v7.widget.RecyclerView
         android:id="@+id/bottomMove_recyclerView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="420dp"
        />
-
+    </android.support.v4.widget.NestedScrollView>
 </LinearLayout>

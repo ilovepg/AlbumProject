@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     //기타
     StringTokenizer st;
     private static final String TAG = "MainActivity";
+    ArrayList<String> selectedItem=new ArrayList<String>(); //편집모드에서 선택된 아이템들
 
     //메뉴타입 정의
     int menu_type = 0;
@@ -112,6 +113,17 @@ public class MainActivity extends AppCompatActivity {
                     boolean isChecked = file_list.get(position).isChecked(); //클릭한 아이템의 check 상태를 가져온다.
                     file_list.get(position).setChecked(!isChecked);          //가져온 check 상태와 반대의 값을 넣는다. (check됐으면 check안되게, check안됐으면 check되게)
                     adapter.notifyItemChanged(position,file_list.get(position)); //adapter 새로고침(해당 포지션만)
+
+                    //선택된 아이템들을 ArrayList에 넣는다.
+                    Log.e(TAG,"file_list"+file_list.get(position).getPwd());
+                    if(file_list.get(position).isChecked()){
+                        String absolutePath=basePath;                          //완성된 경로
+                        String fileName=file_list.get(position).getFileName(); //선택한 파일이름
+                        String depth=file_list.get(position).getPwd();         //파일이 있는 상대적 주소(기본 경로를 뺀 경로임)
+                        absolutePath=absolutePath+depth+"/"+fileName; //경로를 완성시킨다.
+
+                    }
+
                 }
             }
 
@@ -305,8 +317,12 @@ public class MainActivity extends AppCompatActivity {
         }else if(id==R.id.action_editFolder){ //편집모드를 여는 메뉴
             switchEditMode();
         }else if(id==R.id.action_transferFolder){ //파일을 이동하는 메뉴
-            MoveBottomSheet moveBottomSheet = MoveBottomSheet.getInstance();
-            moveBottomSheet.show(getSupportFragmentManager(),"moveBottomSheet");
+            MoveBottomSheet moveBottomSheet = new MoveBottomSheet();
+            //moveBottomSheet.setCancelable(false); //바텀시트의 밖의 부분을 눌러도 취소가 안되게
+
+            //
+
+            moveBottomSheet.show(getSupportFragmentManager(),moveBottomSheet.getTag());
         }else if(id==R.id.action_copyFolder){  //파일을 복사하는 메뉴
 
         }
@@ -342,7 +358,6 @@ public class MainActivity extends AppCompatActivity {
             //adapter에게 알린다.
             adapter.notifyDataSetChanged();
         }
-
     }
 
     //디렉토리 뒤로가기 메소드
