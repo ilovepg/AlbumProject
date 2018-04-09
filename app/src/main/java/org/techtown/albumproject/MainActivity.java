@@ -121,9 +121,7 @@ public class MainActivity extends AppCompatActivity {
                         String fileName=file_list.get(position).getFileName(); //선택한 파일이름
                         String depth=file_list.get(position).getPwd();         //파일이 있는 상대적 주소(기본 경로를 뺀 경로임)
                         absolutePath=absolutePath+depth+"/"+fileName; //경로를 완성시킨다.
-
                     }
-
                 }
             }
 
