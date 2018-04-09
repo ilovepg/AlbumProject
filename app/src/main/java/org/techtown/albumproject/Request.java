@@ -5,6 +5,8 @@ import java.util.List;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.POST;
+import retrofit2.http.Part;
 import retrofit2.http.Query;
 
 /**
@@ -29,10 +31,10 @@ public interface Request {
     );
 
     //파일 이동
-    @GET("moveFile.php")
+    @POST("moveFile.php")
     Call<ResponseBody> mvFile(
-            @Query("userID")String userID,
-            @Query("path")String path,
-            @Query("fileName")String fileName
+            @Part("userID")String userID,
+            @Part("sourcePath")String sourcePath,
+            @Part("targetPath")String targetPath
     );
 }

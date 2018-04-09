@@ -121,6 +121,17 @@ public class MainActivity extends AppCompatActivity {
                         String fileName=file_list.get(position).getFileName(); //선택한 파일이름
                         String depth=file_list.get(position).getPwd();         //파일이 있는 상대적 주소(기본 경로를 뺀 경로임)
                         absolutePath=absolutePath+depth+"/"+fileName; //경로를 완성시킨다.
+
+                        //완성된 경로를 ArrayList에 담는다.
+                        selectedItem.add(absolutePath);
+                    }else{
+                        String absolutePath=basePath;                          //완성된 경로
+                        String fileName=file_list.get(position).getFileName(); //선택한 파일이름
+                        String depth=file_list.get(position).getPwd();         //파일이 있는 상대적 주소(기본 경로를 뺀 경로임)
+                        absolutePath=absolutePath+depth+"/"+fileName; //경로를 완성시킨다.
+
+                        //선택해제된 경로를 지워준다.
+                        selectedItem.remove(absolutePath);
                     }
                 }
             }
@@ -129,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
             public void onItemLongClick(View v, int position) {
                 editMode=adapter.getEditMode();
                 if(editMode==0){ //편집모드가 일반일 때만 편집모드에 진입할 수 있다.
-                    switchEditMode();
+                    switchEditMode(1);
                 }
             }
         }));
@@ -287,7 +298,7 @@ public class MainActivity extends AppCompatActivity {
                     .setPositiveButton("생성", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-
+                            //아래에서 재정의할 겁니다.
                         }
                     })
                     .setNegativeButton("취소", new DialogInterface.OnClickListener() {
@@ -313,12 +324,16 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }else if(id==R.id.action_editFolder){ //편집모드를 여는 메뉴
-            switchEditMode();
+            switchEditMode(1); //0: 일반 1:편집
         }else if(id==R.id.action_transferFolder){ //파일을 이동하는 메뉴
             MoveBottomSheet moveBottomSheet = new MoveBottomSheet();
             //moveBottomSheet.setCancelable(false); //바텀시트의 밖의 부분을 눌러도 취소가 안되게
 
-            //
+            //Fragment에 선택된 파일들의 경로가 들어있는 ArrayList를 넘겨준다.
+            Bundle bundle = new Bundle(1); //매게변수는 데이터를 전달할 개수
+            MovePathItemParcer movePathItemParcer = new MovePathItemParcer(selectedItem);
+            bundle.putParcelable("selectedPath",movePathItemParcer);
+            moveBottomSheet.setArguments(bundle);
 
             moveBottomSheet.show(getSupportFragmentManager(),moveBottomSheet.getTag());
         }else if(id==R.id.action_copyFolder){  //파일을 복사하는 메뉴
@@ -341,21 +356,23 @@ public class MainActivity extends AppCompatActivity {
     //스마트폰의 backButton을 눌렀을 때
     @Override
     public void onBackPressed() {
-        editMode=adapter.getEditMode(); //현재의 편짐모드 상태를 가져온다.
-        if(editMode==0){         //편집모드가 비활성화라면
-            if(backBtn.getVisibility()==View.GONE){
+        editMode = adapter.getEditMode(); //현재의 편집모드 상태를 가져온다.
+        if (editMode == 0) {         //편집모드가 비활성화라면
+            if (backBtn.getVisibility() == View.GONE) {
                 super.onBackPressed(); //만약 뒤로가기 버튼이 안보인다면 종료
-            }else{
+            } else {
                 goToBack();            //뒤로가기 메소드를 호출한다.
             }
-        }else{                   //편집모드가 활성화 라면
+        } else {                   //편집모드가 활성화 라면
             //편집모드를 비활성화 시킨다.
-            editMode=0;
+            switchEditMode(0);
+            /*editMode=0;
             menu_type=editMode;
             adapter.setEditMode(editMode);
             //adapter에게 알린다.
-            adapter.notifyDataSetChanged();
+            adapter.notifyDataSetChanged();*/
         }
+
     }
 
     //디렉토리 뒤로가기 메소드
@@ -373,13 +390,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //편집모드로 바꾸는 메소드
-    private void switchEditMode(){
+    /*private void switchEditMode(){
         editMode=1;  //편집모드 0:일반, 1:편집
         menu_type=editMode; //menu_type을 바꾼다.
         adapter.setEditMode(editMode);
         adapter.notifyDataSetChanged();
+    }*/
+
+    //편집모드의 상태를 바꾼다.
+    private void switchEditMode(int modeType){
+        editMode=modeType; // 0: 일반, 1:편집모드
+        menu_type=editMode; //menu_type을 바꾼다.
+        adapter.setEditMode(editMode);
+        adapter.notifyDataSetChanged();
+
+        //편집모드가 종료되었다면 선택된 아이템을 가지고 있는 ArrayList를 초기화시켜준다.
+        if(modeType==0){
+            selectedItem.clear();
+        }
+
     }
-
-
-
 }

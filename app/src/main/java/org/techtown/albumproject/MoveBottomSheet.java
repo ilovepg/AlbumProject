@@ -1,6 +1,8 @@
 package org.techtown.albumproject;
 
 import android.app.Dialog;
+import android.content.DialogInterface;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.BottomSheetDialogFragment;
@@ -10,15 +12,21 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -29,7 +37,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * Created by Developer on 2018-04-05.
  */
 
-public class MoveBottomSheet extends BottomSheetDialogFragment{
+public class MoveBottomSheet extends BottomSheetDialogFragment {
 
     /*UI관련*/
     private RecyclerView recyclerView;
@@ -41,6 +49,7 @@ public class MoveBottomSheet extends BottomSheetDialogFragment{
     private String basePath="/var/www/html/albumProject/album/"; //베이스 경로
     private ArrayList<String> pathDepth=new ArrayList<String>();
     private String currentPath=""; //basePath+pathDepth 따라서 현재 작업 디렉토리임.
+    private ArrayList<String>selectedItem; //체크된 아이템들
 
     //기타
     StringTokenizer st;
@@ -80,14 +89,42 @@ public class MoveBottomSheet extends BottomSheetDialogFragment{
         }
     };
 
-    //생성자
-    public MoveBottomSheet() {
+    //현재는 Back키 이벤트를 여기서 제어
+    @Override
+    public void onResume() {
+        super.onResume();
 
+        //FragmentDialog는 이런식으로 Back키 이벤트를 받는다.
+        getDialog().setOnKeyListener(new DialogInterface.OnKeyListener() {
+            @Override
+            public boolean onKey(DialogInterface dialogInterface, int i, KeyEvent keyEvent) {
+                if((i==android.view.KeyEvent.KEYCODE_BACK)){
+                    //두번 눌려지것 필터링
+                    if(keyEvent.getAction()!=KeyEvent.ACTION_DOWN)
+                        return true;
+                    else{
+                        if(pathDepth.size()>=1){
+                            onBack();
+                            return true;
+                        }else {
+                            dismiss();
+                            return true;
+                        }
+                    }
+                }else return false;
+            }
+        });
     }
 
     @Override
     public void setupDialog(Dialog dialog, int style) {
         super.setupDialog(dialog, style);
+
+        //선택된 파일들의 경로를 받는다.
+        Bundle bundle = getArguments();
+        MovePathItemParcer item=bundle.getParcelable("selectedPath");
+        selectedItem=item.getArrayList();
+
         View contentView = View.inflate(getContext(),R.layout.bottom_move,null);
         dialog.setContentView(contentView);
         CoordinatorLayout.LayoutParams layoutParams =
@@ -116,6 +153,22 @@ public class MoveBottomSheet extends BottomSheetDialogFragment{
             @Override
             public void onClick(View v) {
                 dismiss();
+            }
+        });
+
+        //이동
+        bottomMove_submit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //현재경로를 구한다. (그냥 currentPath를 그냥 사용해도 무방.)
+                currentPath="";
+                currentPath+=basePath;
+
+                //path Depth만큼 Path를 더해준다.
+                for(int i=0; i<pathDepth.size();i++){
+                    currentPath+=(pathDepth.get(i)+"/");
+                }
+                moveFiles(currentPath);
             }
         });
 
@@ -195,8 +248,6 @@ public class MoveBottomSheet extends BottomSheetDialogFragment{
                         pathDepth.add(st.nextToken()); //현재 작업 디렉토리를 저장.
                     }
 
-
-
                      /*//Debug
                     for(int i=0;i<file_list.size();i++){
                         Log.e(TAG,"getFileList->"+file_list.get(i).getFileName());
@@ -217,5 +268,72 @@ public class MoveBottomSheet extends BottomSheetDialogFragment{
             }
         });
     }
+
+    //파일 이동 메소드
+    private void moveFiles(String targetPath){
+        String sourcePath=null;
+
+        //체크된 아이템들을 @/@/ 형태의 스플릿으로 만든다.
+        for(int i=0; i<selectedItem.size();i++){
+            if(i==0){ //처음에는 그냥 넣어준다.
+                sourcePath=selectedItem.get(i);
+            }else{
+                sourcePath=sourcePath+"@/@/"+selectedItem.get(i);
+            }
+        }
+
+        Retrofit.Builder builder = new Retrofit.Builder()
+                .baseUrl("http://52.78.47.225/albumProject/")
+                .addConverterFactory(GsonConverterFactory.create());
+        Retrofit retrofit = builder.build();
+
+        Request request = retrofit.create(Request.class);
+        Call<ResponseBody>call = request.mvFile("test",sourcePath,targetPath);
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if(response.isSuccessful()){
+                    try {
+                        JSONObject jsonObject = new JSONObject(response.body().string());
+                        String result = jsonObject.getString("result");
+                        if(result.equals("success")){
+
+                        }else{
+
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }else{
+                    int statusCode = response.code();
+                    Log.e(TAG,"moveFiles statusCode->"+statusCode);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Toast.makeText(getActivity(), "fail", Toast.LENGTH_SHORT).show();
+                Log.e(TAG,"moveFiles fail->"+t.toString());
+            }
+        });
+    }
+
+    //뒤로가기 메소드
+    public void onBack() {
+        pathDepth.remove(pathDepth.size() - 1); //마지막 path를 삭제
+
+        currentPath = "";
+        currentPath += basePath;
+
+        //pathDepth 만큼 Path를 더해준다.
+        for (int i = 0; i < pathDepth.size(); i++) {
+            currentPath += (pathDepth.get(i) + "/");
+        }
+        getFileList("test", currentPath);
+
+    }
+
 
 }
